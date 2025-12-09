@@ -3,7 +3,7 @@ Advanced Traffic Roundabout Simulation with Intelligent Car Path Planning and Tr
 Uses the Mid-Point Circle Algorithm (MPCA) to render the roundabout, lanes, and traffic lights.
 
 Features:
-- Animated cars moving along roundabout lanes (now drawing as car shapes)
+- Animated cars moving along roundabout lanes
 - Collision avoidance using local path planning
 - Adjustable traffic density and car speed
 - Traffic light simulation at entry points with changing colors
@@ -23,16 +23,15 @@ import random
 
 # ------------------------ Configuration ------------------------
 WIDTH, HEIGHT = 800, 800
-NUM_CARS = 25  # Increased car count for higher density
-MIN_RADIUS = 100 # Reduced minimum radius to make the inner island smaller
-MAX_RADIUS = 300 # Increased maximum radius to make the overall roundabout larger
-CAR_WIDTH = 6
-CAR_LENGTH = 12
+NUM_CARS = 10
+MIN_RADIUS = 150
+MAX_RADIUS = 250
+CAR_WIDTH = 6  # New: Car dimensions
+CAR_LENGTH = 12 # New: Car dimensions
 CAR_SPEED = 1.5  # degrees per frame
 SHOW_INSTRUCTIONS = True
 USE_MPCA = True
 TRAFFIC_LIGHT_INTERVAL = 200  # frames per light change
-NUM_LANES = 5 
 
 # state
 cars = []
@@ -93,22 +92,17 @@ class Car:
 def generate_cars(num=NUM_CARS):
     global cars
     cars = []
-    # Use the new NUM_LANES constant
-    max_lane_radius = MAX_RADIUS - CAR_WIDTH/2
-    min_lane_radius = MIN_RADIUS + CAR_WIDTH/2
-    
     for _ in range(num):
-        # Ensure cars spawn within the defined lane structure
-        lane_radius = random.uniform(min_lane_radius, max_lane_radius)
+        lane_radius = random.uniform(MIN_RADIUS + CAR_WIDTH/2, MAX_RADIUS - CAR_WIDTH/2) # Adjust radius range
         angle = random.uniform(0, 360)
         speed = CAR_SPEED * random.uniform(0.8, 1.2)
         cars.append(Car(lane_radius, angle, speed))
 
 # ---------------- Draw Roundabout ------------------
 def draw_roundabout():
-    # Use the new global NUM_LANES constant
-    lane_width = (MAX_RADIUS - MIN_RADIUS)/NUM_LANES
-    for i in range(NUM_LANES):
+    num_lanes = 3
+    lane_width = (MAX_RADIUS - MIN_RADIUS)/num_lanes
+    for i in range(num_lanes):
         radius = MIN_RADIUS + (i + 0.5) * lane_width
         color = (0.2, 0.2, 0.2, 0.8)
         if USE_MPCA:
@@ -137,7 +131,7 @@ def draw_circle_poly(xc, yc, radius, color=(0.0, 1.0, 0.0, 0.5), segments=128):
         glVertex2f(x, y)
     glEnd()
 
-# ---------------- Draw Cars ------------------
+# ---------------- Draw Cars (MODIFIED) ------------------
 def draw_cars():
     glLineWidth(1.0) # For drawing car outlines
     
@@ -227,8 +221,7 @@ def display():
     if SHOW_INSTRUCTIONS:
         glColor3f(1.0, 1.0, 1.0)
         lines = [
-            f"Traffic Density: {NUM_CARS} cars (use '+' / '-' to change)",
-            f"Car Speed: {CAR_SPEED:.1f} degrees/frame (use S/s to change)",
+            "Controls: '+' / '-' change traffic density, S/s change speed",
             "I toggle instructions, Q/Esc quit"
         ]
         y = 20
@@ -254,8 +247,7 @@ def keyboard(key, x, y):
     elif k in ('s', 'S'):
         if k == 's': CAR_SPEED = max(0.1, CAR_SPEED - 0.2)
         else: CAR_SPEED += 0.2
-        # Update speed for all existing cars
-        for car in cars: car.speed = CAR_SPEED * random.uniform(0.8, 1.2)
+        for car in cars: car.speed = CAR_SPEED
     elif k in ('i', 'I'): SHOW_INSTRUCTIONS = not SHOW_INSTRUCTIONS
     elif k in ('q', 'Q', '\x1b'): glutLeaveMainLoop()
     glutPostRedisplay()
@@ -265,27 +257,11 @@ def timer(value):
     glutPostRedisplay()
     glutTimerFunc(33, timer, 0)
 
-# ---------------- Main (MODIFIED for Centering) ------------------
+# ---------------- Main ------------------
 def main():
     glutInit()
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_ALPHA)
-    
-    # --- New code for centering the window on screen ---
-    
-    # 1. Get screen dimensions
-    screen_width = glutGet(GLUT_SCREEN_WIDTH)
-    screen_height = glutGet(GLUT_SCREEN_HEIGHT)
-    
-    # 2. Calculate window position for center
-    window_x = (screen_width - WIDTH) // 2
-    window_y = (screen_height - HEIGHT) // 2
-    
-    # 3. Set window size and position
     glutInitWindowSize(WIDTH, HEIGHT)
-    glutInitWindowPosition(window_x, window_y)
-    
-    # --- End new code ---
-    
     glutCreateWindow(b"Advanced Traffic Roundabout Simulation with Traffic Lights")
 
     glClearColor(0.1, 0.1, 0.1, 1.0)
